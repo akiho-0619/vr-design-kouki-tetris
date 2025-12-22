@@ -1,11 +1,15 @@
 import { init } from "@masabando/easy-three";
-const { camera, create, animate, controls, load, helper, THREE } = init();
+const { camera, create, animate, controls, load, helper, THREE, event } = init();
 
 const CUBE_SIZE = 0.2;
+const SHADOW_CUBE_SIZE = 0.1;
+let dropStage = 0;
+const drop_delays = [0.8, 0.7, 0.6, 0.4, 0.3, 0.2, 0.1];
 const minos = ["O", "I", "L", "J", "S", "Z", "T"];
 let drops = shuffle(minos);
+let sumDelays = 0;
 
-let droping = drops.shift();
+let droping = null;//drops.shift();
 
 
 let playersBoard = Array(20).fill().map(() => Array(10).fill(0));
@@ -21,78 +25,12 @@ helper.axes();
 // OILJSZT
 const colors = ["#ffde0a", "#00ddfa", "#0020f0", "#f07400", "#93f500", "#f52500", "#c505ff"];
 
-
-const dropMinos = {
-    "O":create.group({position: [-2, 0, 1],
-        children:[
-            create.cube({position:[0, 0, 0], size:CUBE_SIZE, option:{color: colors[0]}}),
-            create.cube({position:[CUBE_SIZE, 0, 0], size:CUBE_SIZE, option:{color: colors[0]}}),
-            create.cube({position:[0, CUBE_SIZE, 0], size:CUBE_SIZE, option:{color: colors[0]}}),
-            create.cube({position:[CUBE_SIZE, CUBE_SIZE, 0], size:CUBE_SIZE, option:{color: colors[0]}}),
-        ],
-    }),
-
-    "I":create.group({position: [-1.5, 0, 1],
-        children:[
-            create.cube({position:[0, 0, 0], size:CUBE_SIZE, option:{color: colors[1]}}),
-            create.cube({position:[0, CUBE_SIZE, 0], size:CUBE_SIZE, option:{color: colors[1]}}),
-            create.cube({position:[0, 2*CUBE_SIZE, 0], size:CUBE_SIZE, option:{color: colors[1]}}),
-            create.cube({position:[0, 3*CUBE_SIZE, 0], size:CUBE_SIZE, option:{color: colors[1]}}),
-        ],
-    }),
-
-    "L":create.group({position: [-1, 0, 1],
-        children:[
-            create.cube({position:[0, 0, 0], size:CUBE_SIZE, option:{color: colors[2]}}),
-            create.cube({position:[0, CUBE_SIZE, 0], size:CUBE_SIZE, option:{color: colors[2]}}),
-            create.cube({position:[0, 2*CUBE_SIZE, 0], size:CUBE_SIZE, option:{color: colors[2]}}),
-            create.cube({position:[CUBE_SIZE, 0, 0], size:CUBE_SIZE, option:{color: colors[2]}}),
-        ],
-    }),
-
-    "J":create.group({position: [0, 0, 1],
-        children:[
-            create.cube({position:[0, 0, 0], size:CUBE_SIZE, option:{color: colors[3]}}),
-            create.cube({position:[0, CUBE_SIZE, 0], size:CUBE_SIZE, option:{color: colors[3]}}),
-            create.cube({position:[0, 2*CUBE_SIZE, 0], size:CUBE_SIZE, option:{color: colors[3]}}),
-            create.cube({position:[-CUBE_SIZE, 0, 0], size:CUBE_SIZE, option:{color: colors[3]}}),
-        ],
-    }),
-        
-    "S":create.group({position: [0.5, 0, 1],
-        children:[
-            create.cube({position:[0, CUBE_SIZE, 0], size:CUBE_SIZE, option:{color: colors[4]}}),
-            create.cube({position:[CUBE_SIZE,CUBE_SIZE, 0], size:CUBE_SIZE, option:{color: colors[4]}}),
-            create.cube({position:[0, 0, 0], size:CUBE_SIZE, option:{color: colors[4]}}),
-            create.cube({position:[-CUBE_SIZE, 0, 0], size:CUBE_SIZE, option:{color: colors[4]}}),
-        ],
-    }),
-
-    "Z":create.group({position: [1.5, 0, 1],
-        children:[
-            create.cube({position:[0, CUBE_SIZE, 0], size:CUBE_SIZE, option:{color: colors[5]}}),
-            create.cube({position:[-CUBE_SIZE,CUBE_SIZE, 0], size:CUBE_SIZE, option:{color: colors[5]}}),
-            create.cube({position:[0, 0, 0], size:CUBE_SIZE, option:{color: colors[5]}}),
-            create.cube({position:[CUBE_SIZE, 0, 0], size:CUBE_SIZE, option:{color: colors[5]}}),
-        ],
-    }),
-
-    "T":create.group({position: [2.5, 0, 1],
-        children:[
-            create.cube({position:[0, 0, 0], size:CUBE_SIZE, option:{color: colors[6]}}),
-            create.cube({position:[-CUBE_SIZE, 0, 0], size:CUBE_SIZE, option:{color: colors[6]}}),
-            create.cube({position:[0, CUBE_SIZE, 0], size:CUBE_SIZE, option:{color: colors[6]}}),
-            create.cube({position:[CUBE_SIZE, 0, 0], size:CUBE_SIZE, option:{color: colors[6]}}),
-        ],
-    }),
-};
-
 // player's board  
 for (let j=0; j<20; j++){
     for (let i=0; i<10; i++){
         create.cube({
-            position:[-3 + i*CUBE_SIZE, -1.5 + j*0.2, 0],
-            size:CUBE_SIZE,
+            position:[-3 + i*CUBE_SIZE, -1.5 + j*CUBE_SIZE, 0],
+            size:SHADOW_CUBE_SIZE,
             option:{color: colors[(20*j + i) % colors.length]},
         });
     }
@@ -103,13 +41,117 @@ for (let j=0; j<20; j++){
     for (let i=0; i<10; i++){
         create.cube({
             position:[3 - i*CUBE_SIZE, -1.5 + j*0.2, 0],
-            size:CUBE_SIZE,
+            size:SHADOW_CUBE_SIZE,
             option:{color: colors[(20*j + i) % colors.length]},
         });
     }
 }
-animate(({delta, time})=>{
 
+function createDropMino(type){
+    let mino;
+    switch(type){
+        case "O":
+            mino = create.group({position: [-2, 0, 1],
+                children:[
+                    create.cube({position:[0, 0, 0], size:CUBE_SIZE, option:{color: colors[0]}}),
+                    create.cube({position:[CUBE_SIZE, 0, 0], size:CUBE_SIZE, option:{color: colors[0]}}),
+                    create.cube({position:[0, CUBE_SIZE, 0], size:CUBE_SIZE, option:{color: colors[0]}}),
+                    create.cube({position:[CUBE_SIZE, CUBE_SIZE, 0], size:CUBE_SIZE, option:{color: colors[0]}}),
+                ],
+            });
+            break;
+
+        case "I":
+            mino = create.group({position: [-1.5, 0, 1],
+                children:[
+                    create.cube({position:[0, 0, 0], size:CUBE_SIZE, option:{color: colors[1]}}),
+                    create.cube({position:[0, CUBE_SIZE, 0], size:CUBE_SIZE, option:{color: colors[1]}}),
+                    create.cube({position:[0, 2*CUBE_SIZE, 0], size:CUBE_SIZE, option:{color: colors[1]}}),
+                    create.cube({position:[0, 3*CUBE_SIZE, 0], size:CUBE_SIZE, option:{color: colors[1]}}),
+                ],
+            });
+            break;
+
+        case "L":
+            mino = create.group({position: [-1, 0, 1],
+                children:[
+                    create.cube({position:[0, 0, 0], size:CUBE_SIZE, option:{color: colors[2]}}),
+                    create.cube({position:[0, CUBE_SIZE, 0], size:CUBE_SIZE, option:{color: colors[2]}}),
+                    create.cube({position:[0, 2*CUBE_SIZE, 0], size:CUBE_SIZE, option:{color: colors[2]}}),
+                    create.cube({position:[CUBE_SIZE, 0, 0], size:CUBE_SIZE, option:{color: colors[2]}}),
+                ],
+            });
+            break;
+
+        case "J":
+            mino = create.group({position: [0, 0, 1],
+                children:[
+                    create.cube({position:[0, 0, 0], size:CUBE_SIZE, option:{color: colors[3]}}),
+                    create.cube({position:[0, CUBE_SIZE, 0], size:CUBE_SIZE, option:{color: colors[3]}}),
+                    create.cube({position:[0, 2*CUBE_SIZE, 0], size:CUBE_SIZE, option:{color: colors[3]}}),
+                    create.cube({position:[-CUBE_SIZE, 0, 0], size:CUBE_SIZE, option:{color: colors[3]}}),
+                ],
+            });
+            break;
+        
+        case "S":
+            mino = create.group({position: [0.5, 0, 1],
+                children:[
+                    create.cube({position:[0, CUBE_SIZE, 0], size:CUBE_SIZE, option:{color: colors[4]}}),
+                    create.cube({position:[CUBE_SIZE,CUBE_SIZE, 0], size:CUBE_SIZE, option:{color: colors[4]}}),
+                    create.cube({position:[0, 0, 0], size:CUBE_SIZE, option:{color: colors[4]}}),
+                    create.cube({position:[-CUBE_SIZE, 0, 0], size:CUBE_SIZE, option:{color: colors[4]}}),
+                ],
+            });
+            break;
+
+        case "Z":
+            mino = create.group({position: [1.5, 0, 1],
+                children:[
+                    create.cube({position:[0, CUBE_SIZE, 0], size:CUBE_SIZE, option:{color: colors[5]}}),
+                    create.cube({position:[-CUBE_SIZE,CUBE_SIZE, 0], size:CUBE_SIZE, option:{color: colors[5]}}),
+                    create.cube({position:[0, 0, 0], size:CUBE_SIZE, option:{color: colors[5]}}),
+                    create.cube({position:[CUBE_SIZE, 0, 0], size:CUBE_SIZE, option:{color: colors[5]}}),
+                ],
+            });
+            break;
+
+        case "T":
+            mino = create.group({position: [2.5, 0, 1],
+            children:[
+                create.cube({position:[0, 0, 0], size:CUBE_SIZE, option:{color: colors[6]}}),
+                create.cube({position:[-CUBE_SIZE, 0, 0], size:CUBE_SIZE, option:{color: colors[6]}}),
+                create.cube({position:[0, CUBE_SIZE, 0], size:CUBE_SIZE, option:{color: colors[6]}}),
+                create.cube({position:[CUBE_SIZE, 0, 0], size:CUBE_SIZE, option:{color: colors[6]}}),
+            ],
+        });
+        break;
+
+    }
+    return mino;
+}
+
+animate(({delta, time})=>{
+    // a.position.lerp(new THREE.Vector3(-2.2, 2.3, 0), 0.1);
+    if (droping == null){
+        droping = createDropMino(drops.shift());
+        droping.position.set(-2.2, 2.3, 0);
+
+        if (drops.length == 0){
+            drops = shuffle(minos);
+        }
+    }
+    sumDelays += delta;
+    if (sumDelays > drop_delays[dropStage]) {
+        if (droping.position.y > -1.5) {
+           droping.position.y -= 0.2;
+        } else {
+            // place the mino on the board
+            playersBoard[Math.round((1.5 + droping.position.y) / CUBE_SIZE)][Math.round((3 + droping.position.x) / CUBE_SIZE)] = 1;
+            droping = null;
+        }
+        sumDelays %= drop_delays[dropStage];
+    }
 })
 
 function shuffle(array) {
@@ -121,5 +163,35 @@ function shuffle(array) {
     return return_array;
 }
 
-//ktc.ac.jp/img/motion/
+event.key.add((key, e) => {
+    switch(key){
+        case "a":
+            droping.position.x += -CUBE_SIZE;
+            break;
+        case "d":
+            droping.position.x += CUBE_SIZE;
+            break;
+
+        case "s":
+            if (droping.position.y > -1.5) {
+                droping.position.y -= 0.2;
+            } else {
+                // place the mino on the board
+                playersBoard[Math.round((1.5 + droping.position.y) / CUBE_SIZE)][Math.round((3 + droping.position.x) / CUBE_SIZE)] = 1;
+                droping = null;
+            }
+            sumDelays %= drop_delays[dropStage];
+            break;
+
+        case "q":
+            droping.rotation.z += Math.PI / 2;
+            break;
+
+        case "e":
+            droping.rotation.z += -Math.PI / 2;
+            break;
+    }
+});
+
+//https://www.ktc.ac.jp/img/motion/
 //https://www.ktc.ac.jp/3D/
