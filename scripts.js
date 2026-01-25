@@ -172,7 +172,7 @@ function placeMino(mino, rotate, boardX, boardY, board){
             break;
     }
 
-    console.log(board.reverse().map(row => row.join(" ")).join("\n"));
+    console.log([...board].reverse().map(row => row.join(" ")).join("\n"));
     /*
 
     ## # #   #  ## ##   #
@@ -200,7 +200,7 @@ animate(({delta, time})=>{
         }
     }
     sumDelays += delta;
-    if (sumDelays > drop_delays[dropStage]) {
+    if (sumDelays > drop_delays[dropStage]) {   //時間経過の落下
         if (dropingMino.position.y > -1.5) {
            dropingMino.position.y -= 0.2;
         } else {
@@ -251,6 +251,9 @@ event.key.add((key, e) => {
         case "e":   // rotate right
             dropingMino.rotation.z += -Math.PI / 2;
             break;
+
+        case "w":  // hard drop
+            a+1;
     }
 });
 
