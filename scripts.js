@@ -13,8 +13,8 @@ let dropingMino = null;//drops.shift();
 let droping = null;
 
 
-let playersBoard = Array(20).fill().map(() => Array(10).fill(0));
-let opponentBoard = Array(20).fill().map(() => Array(10).fill(0));
+let playersBoard = Array(23).fill().map(() => Array(10).fill(0));
+let opponentBoard = Array(23).fill().map(() => Array(10).fill(0));
 
 controls.connect()
 camera.position.set(0, 2, 4)
@@ -145,7 +145,11 @@ function createDropMino(type){
 function placeMino(mino, rotate, boardX, boardY, board){
     const STANDARD_X = Math.round((3 + boardX) / CUBE_SIZE);
     const STANDARD_Y = Math.round((1.5 + boardY) / CUBE_SIZE);
-    const ROTATE_NUM = Math.round(rotate / (Math.PI / 2))%4; 
+    let ROTATE_NUM = Math.round(rotate / (Math.PI / 2))%4; 
+    if (ROTATE_NUM < 0) {
+        ROTATE_NUM += 4;
+    }
+
     board[STANDARD_Y][STANDARD_X] = 1;
     console.log(`Placing mino ${mino} at (${STANDARD_X}, ${STANDARD_Y}) rotated ${ROTATE_NUM} times`);
     console.log(STANDARD_Y + MINO_OFFSET[mino][1][1], STANDARD_X + MINO_OFFSET[mino][1][0])
@@ -155,8 +159,9 @@ function placeMino(mino, rotate, boardX, boardY, board){
                 board[STANDARD_Y + MINO_OFFSET[mino][i][1]][STANDARD_X + MINO_OFFSET[mino][i][0]] = 1;
             }
             break;
-        case 1:
+        case 1: // rotate to Q
             for (let i = 1; i < 4; i++){
+                console.log(STANDARD_Y + MINO_OFFSET[mino][i][0], STANDARD_X - MINO_OFFSET[mino][i][1])
                 board[STANDARD_Y + MINO_OFFSET[mino][i][0]][STANDARD_X - MINO_OFFSET[mino][i][1]] = 1;
             }
             break;
@@ -167,26 +172,61 @@ function placeMino(mino, rotate, boardX, boardY, board){
             break;
         case 3:
             for (let i = 1; i < 4; i++){
+                console.log(STANDARD_Y + MINO_OFFSET[mino][i][0], STANDARD_X - MINO_OFFSET[mino][i][1])
                 board[STANDARD_Y - MINO_OFFSET[mino][i][0]][STANDARD_X + MINO_OFFSET[mino][i][1]] = 1;
             }
             break;
     }
 
     console.log([...board].reverse().map(row => row.join(" ")).join("\n"));
-    /*
 
-    ## # #   #  ## ##   #
-    O# # #   # #O   O# #O#
-       # O# #O
-       O
-
-    S
-    -1, 0  0, +1  +1, +1
-    +1, 0  0, +1  +1, -1
-    +1, 0  0, -1  -1, -1
-    -1, 0  0, -1  -1, +1
-    */
     return board;
+}
+
+function canDropMino(mino, rotate, boardX, boardY, board){
+    const STANDARD_X = Math.round((3 + boardX) / CUBE_SIZE);
+    const STANDARD_Y = Math.round((1.5 + boardY) / CUBE_SIZE);
+    let ROTATE_NUM = Math.round(rotate / (Math.PI / 2)) % 4;
+    if (ROTATE_NUM < 0) {
+        ROTATE_NUM += 4;
+    }
+    let isCanDrop = true;
+
+    switch (ROTATE_NUM) {
+        case 0:
+            for (let i = 1; i < 4; i++) {
+                if (board[STANDARD_Y + MINO_OFFSET[mino][i][1]-1][STANDARD_X + MINO_OFFSET[mino][i][0]] == 1) {
+                    isCanDrop = false;
+                    break;
+                }
+            }
+            break;
+        case 1:
+            for (let i = 1; i < 4; i++) {
+                if (board[STANDARD_Y + MINO_OFFSET[mino][i][0]-1][STANDARD_X - MINO_OFFSET[mino][i][1]] == 1) {
+                    isCanDrop = false;
+                    break;
+                }
+            }
+            break;
+        case 2:
+            for (let i = 1; i < 4; i++) {
+                if (board[STANDARD_Y - MINO_OFFSET[mino][i][1]-1][STANDARD_X - MINO_OFFSET[mino][i][0]] == 1) {
+                    isCanDrop = false;
+                    break;
+                }
+            }
+            break;
+        case 3:
+            for (let i = 1; i < 4; i++) {
+                if (board[STANDARD_Y - MINO_OFFSET[mino][i][0]-1][STANDARD_X + MINO_OFFSET[mino][i][1]] == 1) {
+                    isCanDrop = false;
+                    break;
+                }
+            }
+            break;
+    }
+    return isCanDrop;
 }
 
 animate(({delta, time})=>{
@@ -201,7 +241,7 @@ animate(({delta, time})=>{
     }
     sumDelays += delta;
     if (sumDelays > drop_delays[dropStage]) {   //時間経過の落下
-        if (dropingMino.position.y > -1.5) {
+        if (dropingMino.position.y > -1.5 && canDropMino(droping, dropingMino.rotation.z, dropingMino.position.x, dropingMino.position.y, playersBoard)) {
            dropingMino.position.y -= 0.2;
         } else {
             // place the mino on the board
@@ -234,7 +274,7 @@ event.key.add((key, e) => {
             break;
 
         case "s":   // soft drop
-            if (dropingMino.position.y > -1.5) {
+            if (dropingMino.position.y > -1.5 && canDropMino(droping, dropingMino.rotation.z, dropingMino.position.x, dropingMino.position.y, playersBoard)) {
                 dropingMino.position.y -= 0.2;
             } else if (dropingMino != null) {
                 // place the mino on the board
