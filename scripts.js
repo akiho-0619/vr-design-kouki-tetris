@@ -155,24 +155,22 @@ function placeMino(mino, rotate, boardX, boardY, board){
     console.log(STANDARD_Y + MINO_OFFSET[mino][1][1], STANDARD_X + MINO_OFFSET[mino][1][0])
     switch (ROTATE_NUM){
         case 0:
-            for (let i = 1; i < 4; i++){
+            for (let i = 0; i < 4; i++){
                 board[STANDARD_Y + MINO_OFFSET[mino][i][1]][STANDARD_X + MINO_OFFSET[mino][i][0]] = 1;
             }
             break;
         case 1: // rotate to Q
-            for (let i = 1; i < 4; i++){
-                console.log(STANDARD_Y + MINO_OFFSET[mino][i][0], STANDARD_X - MINO_OFFSET[mino][i][1])
+            for (let i = 0; i < 4; i++){
                 board[STANDARD_Y + MINO_OFFSET[mino][i][0]][STANDARD_X - MINO_OFFSET[mino][i][1]] = 1;
             }
             break;
         case 2:
-            for (let i = 1; i < 4; i++){
+            for (let i = 0; i < 4; i++){
                 board[STANDARD_Y - MINO_OFFSET[mino][i][1]][STANDARD_X - MINO_OFFSET[mino][i][0]] = 1;
             }
             break;
         case 3:
-            for (let i = 1; i < 4; i++){
-                console.log(STANDARD_Y + MINO_OFFSET[mino][i][0], STANDARD_X - MINO_OFFSET[mino][i][1])
+            for (let i = 0; i < 4; i++){
                 board[STANDARD_Y - MINO_OFFSET[mino][i][0]][STANDARD_X + MINO_OFFSET[mino][i][1]] = 1;
             }
             break;
@@ -194,7 +192,7 @@ function canDropMino(mino, rotate, boardX, boardY, board){
 
     switch (ROTATE_NUM) {
         case 0:
-            for (let i = 1; i < 4; i++) {
+            for (let i = 0; i < 4; i++) {
                 if (board[STANDARD_Y + MINO_OFFSET[mino][i][1]-1][STANDARD_X + MINO_OFFSET[mino][i][0]] == 1) {
                     isCanDrop = false;
                     break;
@@ -202,7 +200,7 @@ function canDropMino(mino, rotate, boardX, boardY, board){
             }
             break;
         case 1:
-            for (let i = 1; i < 4; i++) {
+            for (let i = 0; i < 4; i++) {
                 if (board[STANDARD_Y + MINO_OFFSET[mino][i][0]-1][STANDARD_X - MINO_OFFSET[mino][i][1]] == 1) {
                     isCanDrop = false;
                     break;
@@ -210,7 +208,7 @@ function canDropMino(mino, rotate, boardX, boardY, board){
             }
             break;
         case 2:
-            for (let i = 1; i < 4; i++) {
+            for (let i = 0; i < 4; i++) {
                 if (board[STANDARD_Y - MINO_OFFSET[mino][i][1]-1][STANDARD_X - MINO_OFFSET[mino][i][0]] == 1) {
                     isCanDrop = false;
                     break;
@@ -218,7 +216,7 @@ function canDropMino(mino, rotate, boardX, boardY, board){
             }
             break;
         case 3:
-            for (let i = 1; i < 4; i++) {
+            for (let i = 0; i < 4; i++) {
                 if (board[STANDARD_Y - MINO_OFFSET[mino][i][0]-1][STANDARD_X + MINO_OFFSET[mino][i][1]] == 1) {
                     isCanDrop = false;
                     break;
