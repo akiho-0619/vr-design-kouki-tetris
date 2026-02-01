@@ -111,9 +111,9 @@ function createDropMino(type){
         case "S":
             mino = create.group({position: [0.5, 0, 1],
                 children:[
-                    create.cube({position:[0, CUBE_SIZE, 0], size:CUBE_SIZE, option:{color: COLORS[4]}}),
-                    create.cube({position:[CUBE_SIZE,CUBE_SIZE, 0], size:CUBE_SIZE, option:{color: COLORS[4]}}),
                     create.cube({position:[0, 0, 0], size:CUBE_SIZE, option:{color: COLORS[4]}}),
+                    create.cube({position:[CUBE_SIZE,CUBE_SIZE, 0], size:CUBE_SIZE, option:{color: COLORS[4]}}),
+                    create.cube({position:[0, CUBE_SIZE, 0], size:CUBE_SIZE, option:{color: COLORS[4]}}),
                     create.cube({position:[-CUBE_SIZE, 0, 0], size:CUBE_SIZE, option:{color: COLORS[4]}}),
                 ],
             });
@@ -122,9 +122,9 @@ function createDropMino(type){
         case "Z":
             mino = create.group({position: [1.5, 0, 1],
                 children:[
-                    create.cube({position:[0, CUBE_SIZE, 0], size:CUBE_SIZE, option:{color: COLORS[5]}}),
-                    create.cube({position:[-CUBE_SIZE,CUBE_SIZE, 0], size:CUBE_SIZE, option:{color: COLORS[5]}}),
                     create.cube({position:[0, 0, 0], size:CUBE_SIZE, option:{color: COLORS[5]}}),
+                    create.cube({position:[-CUBE_SIZE,CUBE_SIZE, 0], size:CUBE_SIZE, option:{color: COLORS[5]}}),
+                    create.cube({position:[0, CUBE_SIZE, 0], size:CUBE_SIZE, option:{color: COLORS[5]}}),
                     create.cube({position:[CUBE_SIZE, 0, 0], size:CUBE_SIZE, option:{color: COLORS[5]}}),
                 ],
             });
@@ -153,7 +153,7 @@ function endGame(board){
     return false;
 }
 
-function placeMino(mino, rotate, boardX, boardY, board){
+function placeMino(mino, minos, rotate, boardX, boardY, board, boardMinoes){
     const STANDARD_X = Math.round((3 + boardX) / CUBE_SIZE);
     const STANDARD_Y = Math.round((1.5 + boardY) / CUBE_SIZE);
     let ROTATE_NUM = Math.round(rotate / (Math.PI / 2))%4; 
@@ -168,28 +168,32 @@ function placeMino(mino, rotate, boardX, boardY, board){
         case 0:
             for (let i = 0; i < 4; i++){
                 board[STANDARD_Y + MINO_OFFSET[mino][i][1]][STANDARD_X + MINO_OFFSET[mino][i][0]] = 1;
+                boardMinoes[STANDARD_Y + MINO_OFFSET[mino][i][1]][STANDARD_X + MINO_OFFSET[mino][i][0]] = minos.children[i];
             }
             break;
         case 1: // rotate to Q
             for (let i = 0; i < 4; i++){
                 board[STANDARD_Y + MINO_OFFSET[mino][i][0]][STANDARD_X - MINO_OFFSET[mino][i][1]] = 1;
+                boardMinoes[STANDARD_Y + MINO_OFFSET[mino][i][0]][STANDARD_X - MINO_OFFSET[mino][i][1]] = minos.children[i];
             }
             break;
         case 2:
             for (let i = 0; i < 4; i++){
                 board[STANDARD_Y - MINO_OFFSET[mino][i][1]][STANDARD_X - MINO_OFFSET[mino][i][0]] = 1;
+                boardMinoes[STANDARD_Y - MINO_OFFSET[mino][i][1]][STANDARD_X - MINO_OFFSET[mino][i][0]] = minos.children[i];
             }
             break;
         case 3:
             for (let i = 0; i < 4; i++){
                 board[STANDARD_Y - MINO_OFFSET[mino][i][0]][STANDARD_X + MINO_OFFSET[mino][i][1]] = 1;
+                boardMinoes[STANDARD_Y - MINO_OFFSET[mino][i][0]][STANDARD_X + MINO_OFFSET[mino][i][1]] = minos.children[i];
             }
             break;
     }
 
     console.log([...board].reverse().map(row => row.join(" ")).join("\n"));
 
-    return board;
+    return board, boardMinoes;
 }
 
 function canDropMino(mino, rotate, boardX, boardY, board){
@@ -236,6 +240,29 @@ function canDropMino(mino, rotate, boardX, boardY, board){
             break;
     }
     return isCanDrop;
+}
+
+function isAliggned(board, boardMinoes){
+    for (let i = 19; i >= 0; i--){
+        if (board[i].every(cell => cell == 1)){
+            board.splice(i, 1);
+            board.push(Array(10).fill(0));
+
+            for (let j = 0; j < 10; j++){
+                boardMinoes[i][j].scale.set(0, 0, 0);
+            }
+            for (let j = i; j < 22; j++){
+                for (let k = 0; k < 10; k++){
+                    boardMinoes[j][k] = boardMinoes[j+1][k];
+                    if (boardMinoes[j][k] != null){
+                        boardMinoes[j][k].position.y -= CUBE_SIZE;
+                    }
+                }
+            }
+            // boardMinoes.splice(i, 1);
+            // boardMinoes.push(Array(10).fill(null));
+        }
+    }
 }
 
 function calcStandardFromStandard(mino, rotate){
@@ -293,7 +320,8 @@ animate(({delta, time})=>{
             dropingMino.position.y -= 0.2;
             } else {
                 // place the mino on the board
-                playersBoard = placeMino(droping, dropingMino.rotation.z, dropingMino.position.x, dropingMino.position.y, playersBoard);
+                playersBoard, playersBoardMinoes = placeMino(droping, dropingMino, dropingMino.rotation.z, dropingMino.position.x, dropingMino.position.y, playersBoard, playersBoardMinoes);
+                isAliggned(playersBoard, playersBoardMinoes);
                 if (endGame(playersBoard)){
                     gamePhase = "gameover";
                 }
@@ -319,7 +347,6 @@ event.key.add((key, e) => {
     }
     let dist = calcStandardFromStandard(droping, dropingMino.rotation.z);
     const STANDARD_X = Math.round((3 + dropingMino.position.x) / CUBE_SIZE);
-    console.log(`Standard X: ${STANDARD_X}, Dist: ${dist}`);
     switch(key){
         case "a":   // to left
             if (STANDARD_X + dist[0] - 1 >= 0){
@@ -337,11 +364,13 @@ event.key.add((key, e) => {
             break;
 
         case "s":   // soft drop
+        sumDelays = 0;
             if (dropingMino.position.y > -1.5 && canDropMino(droping, dropingMino.rotation.z, dropingMino.position.x, dropingMino.position.y, playersBoard)) {
                 dropingMino.position.y -= 0.2;
             } else if (dropingMino != null) {
                 // place the mino on the board
-                playersBoard = placeMino(droping, dropingMino.rotation.z, dropingMino.position.x, dropingMino.position.y, playersBoard);
+                playersBoard, playersBoardMinoes = placeMino(droping, dropingMino, dropingMino.rotation.z, dropingMino.position.x, dropingMino.position.y, playersBoard, playersBoardMinoes);
+                isAliggned(playersBoard, playersBoardMinoes);
                 if (endGame(playersBoard)){
                     gamePhase = "gameover";
                 }
