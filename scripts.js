@@ -16,6 +16,8 @@ let droping = null;
 let playersBoard = Array(23).fill().map(() => Array(10).fill(0));
 let opponentBoard = Array(23).fill().map(() => Array(10).fill(0));
 
+let gamePhase = "playing"; // "playing", "gameover"
+
 controls.connect()
 camera.position.set(0, 2, 4)
 create.ambientLight(
@@ -142,6 +144,15 @@ function createDropMino(type){
     return mino;
 }
 
+function endGame(board){
+    // tmp logic
+    if (board[20].some(cell => cell == 1)){
+        console.log("Game Over");
+        return true;
+    }
+    return false;
+}
+
 function placeMino(mino, rotate, boardX, boardY, board){
     const STANDARD_X = Math.round((3 + boardX) / CUBE_SIZE);
     const STANDARD_Y = Math.round((1.5 + boardY) / CUBE_SIZE);
@@ -227,26 +238,32 @@ function canDropMino(mino, rotate, boardX, boardY, board){
     return isCanDrop;
 }
 
-animate(({delta, time})=>{
-    if (dropingMino == null){
-        droping = drops.shift();
-        dropingMino = createDropMino(droping);
-        dropingMino.position.set(-2.2, 2.3, 0);
 
-        if (drops.length == 0){
-            drops = shuffle(minos);
+animate(({delta, time})=>{
+    if (gamePhase == "playing"){
+        if (dropingMino == null){
+            droping = drops.shift();
+            dropingMino = createDropMino(droping);
+            dropingMino.position.set(-2.2, 2.3, 0);
+
+            if (drops.length == 0){
+                drops = shuffle(minos);
+            }
         }
-    }
-    sumDelays += delta;
-    if (sumDelays > drop_delays[dropStage]) {   //時間経過の落下
-        if (dropingMino.position.y > -1.5 && canDropMino(droping, dropingMino.rotation.z, dropingMino.position.x, dropingMino.position.y, playersBoard)) {
-           dropingMino.position.y -= 0.2;
-        } else {
-            // place the mino on the board
-            playersBoard = placeMino(droping, dropingMino.rotation.z, dropingMino.position.x, dropingMino.position.y, playersBoard);
-            dropingMino = null;
+        sumDelays += delta;
+        if (sumDelays > drop_delays[dropStage]) {   //時間経過の落下
+            if (dropingMino.position.y > -1.5 && canDropMino(droping, dropingMino.rotation.z, dropingMino.position.x, dropingMino.position.y, playersBoard)) {
+            dropingMino.position.y -= 0.2;
+            } else {
+                // place the mino on the board
+                playersBoard = placeMino(droping, dropingMino.rotation.z, dropingMino.position.x, dropingMino.position.y, playersBoard);
+                if (endGame(playersBoard)){
+                    gamePhase = "gameover";
+                }
+                dropingMino = null;
+            }
+            sumDelays %= drop_delays[dropStage];
         }
-        sumDelays %= drop_delays[dropStage];
     }
 })
 
@@ -260,6 +277,9 @@ function shuffle(array) {
 }
 
 event.key.add((key, e) => {
+    if (gamePhase != "playing") {
+        return;
+    }
     switch(key){
         case "a":   // to left
             dropingMino.position.x += -CUBE_SIZE;
@@ -277,6 +297,9 @@ event.key.add((key, e) => {
             } else if (dropingMino != null) {
                 // place the mino on the board
                 playersBoard = placeMino(droping, dropingMino.rotation.z, dropingMino.position.x, dropingMino.position.y, playersBoard);
+                if (endGame(playersBoard)){
+                    gamePhase = "gameover";
+                }
                 dropingMino = null;
             }
             sumDelays %= drop_delays[dropStage];
