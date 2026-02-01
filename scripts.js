@@ -15,7 +15,8 @@ let droping = null;
 
 let playersBoard = Array(23).fill().map(() => Array(10).fill(0));
 let opponentBoard = Array(23).fill().map(() => Array(10).fill(0));
-
+let playersBoardMinoes = Array(23).fill().map(() => Array(10).fill(null));
+let opponentBoardMinoes = Array(23).fill().map(() => Array(10).fill(null));
 let gamePhase = "playing"; // "playing", "gameover"
 
 controls.connect()
@@ -145,7 +146,6 @@ function createDropMino(type){
 }
 
 function endGame(board){
-    // tmp logic
     if (board[20].some(cell => cell == 1)){
         console.log("Game Over");
         return true;
@@ -238,6 +238,43 @@ function canDropMino(mino, rotate, boardX, boardY, board){
     return isCanDrop;
 }
 
+function calcStandardFromStandard(mino, rotate){
+    let return_array = [0, 0];
+    let ROTATE_NUM = Math.round(rotate / (Math.PI / 2)) % 4;
+    if (ROTATE_NUM < 0) {
+        ROTATE_NUM += 4;
+    }
+    switch (ROTATE_NUM) {
+        case 0:
+            for (let i = 1; i < 4; i++){
+                return_array[0] = Math.min(return_array[0], MINO_OFFSET[mino][i][0]);
+                return_array[1] = Math.max(return_array[1], MINO_OFFSET[mino][i][0]);
+            }
+            break;
+
+        case 1:
+            for (let i = 1; i < 4; i++){
+                return_array[0] = Math.min(return_array[0], -MINO_OFFSET[mino][i][1]);
+                return_array[1] = Math.max(return_array[1], -MINO_OFFSET[mino][i][1]);
+            }
+            break;
+
+        case 2:
+            for (let i = 1; i < 4; i++) {
+                return_array[0] = Math.min(return_array[0], -MINO_OFFSET[mino][i][0]);
+                return_array[1] = Math.max(return_array[1], -MINO_OFFSET[mino][i][0]);
+            }
+            break;
+
+        case 3:
+            for (let i = 1; i < 4; i++) {
+                return_array[0] = Math.min(return_array[0], MINO_OFFSET[mino][i][1]);
+                return_array[1] = Math.max(return_array[1], MINO_OFFSET[mino][i][1]);
+            }
+            break;
+    }
+    return return_array;
+}
 
 animate(({delta, time})=>{
     if (gamePhase == "playing"){
@@ -280,15 +317,23 @@ event.key.add((key, e) => {
     if (gamePhase != "playing") {
         return;
     }
+    let dist = calcStandardFromStandard(droping, dropingMino.rotation.z);
+    const STANDARD_X = Math.round((3 + dropingMino.position.x) / CUBE_SIZE);
+    console.log(`Standard X: ${STANDARD_X}, Dist: ${dist}`);
     switch(key){
         case "a":   // to left
-            dropingMino.position.x += -CUBE_SIZE;
-            dropingMino.position.x = Math.max(dropingMino.position.x, -3);
+            if (STANDARD_X + dist[0] - 1 >= 0){
+                dropingMino.position.x += -CUBE_SIZE;
+            }
+            // dropingMino.position.x = Math.max(dropingMino.position.x + dist[0] * CUBE_SIZE, -3);
+            
             break;
 
         case "d":   // to right
-            dropingMino.position.x += CUBE_SIZE;
-            dropingMino.position.x = Math.min(dropingMino.position.x, -3 + 9*CUBE_SIZE);
+            if (STANDARD_X + dist[1] + 1 < 10){
+                dropingMino.position.x += CUBE_SIZE;
+            }
+            // dropingMino.position.x = Math.min(dropingMino.position.x - dist[1] * CUBE_SIZE, -1.2);
             break;
 
         case "s":   // soft drop
@@ -314,6 +359,7 @@ event.key.add((key, e) => {
             break;
 
         case "w":  // hard drop
+            let a = 0;
             a+1;
     }
 });
