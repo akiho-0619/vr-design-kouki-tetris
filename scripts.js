@@ -253,9 +253,9 @@ function isAliggned(board, boardMinoes){
             }
             for (let j = i; j < 22; j++){
                 for (let k = 0; k < 10; k++){
-                    boardMinoes[j][k] = boardMinoes[j+1][k];
                     if (boardMinoes[j][k] != null){
                         boardMinoes[j][k].position.y -= CUBE_SIZE;
+                        boardMinoes[j][k] = boardMinoes[j+1][k];
                     }
                 }
             }
@@ -381,10 +381,22 @@ event.key.add((key, e) => {
 
         case "q":   // rotate left
             dropingMino.rotation.z += Math.PI / 2;
+            dist = calcStandardFromStandard(droping, dropingMino.rotation.z);
+            if (STANDARD_X + dist[0] - 1 >= 0){
+                // dropingMino.position.x += CUBE_SIZE;
+                console.log("to out of left");
+            }
+            // dropingMino.position.x = Math.max(dropingMino.position.x + dist[0] * CUBE_SIZE, -3);
             break;
 
         case "e":   // rotate right
             dropingMino.rotation.z += -Math.PI / 2;
+            dist = calcStandardFromStandard(droping, dropingMino.rotation.z);
+            if (STANDARD_X + dist[1] + 1 < 10){
+                console.log("to out of right");
+            //     dropingMino.position.x += CUBE_SIZE;
+            }
+            // dropingMino.position.x = Math.min(dropingMino.position.x - dist[1] * CUBE_SIZE, -1.2);
             break;
 
         case "w":  // hard drop
