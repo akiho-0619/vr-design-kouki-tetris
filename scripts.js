@@ -9,6 +9,8 @@ const minos = ["O", "I", "L", "J", "S", "Z", "T"];
 let drops = shuffle(minos);
 let sumDelays = 0;
 
+let is_holded = false;
+
 let droping = null;
 let dropingMino = null;
 let holding = null;
@@ -38,13 +40,14 @@ const MINO_OFFSET = {
     "Z":[[0,0],[-1,1],[0,1],[1,0]],
     "T":[[0,0],[-1,0],[0,1],[1,0]],
 }
-
+const hold_y = {"O":1.7, "I":1.3, "L":1.5, "J":1.5, "S":1.7, "Z":1.7, "T":1.7};
 
 const hold_text = create.text("hold",{
     size:2,
     position: [-3.5, 2.2, 0],
     fontSize:30,
 });
+
 // 要望：オブジェクトを削除するチュートリアルが欲しいです
 function removeObject(object) {
     if (object.parent) {
@@ -358,6 +361,7 @@ animate(({delta, time})=>{
                 // place the mino on the board
                 console.log(dropingMino.children);
                 playersBoard, playersBoardMinoes = placeMino(droping, dropingMino, dropingMino.rotation.z, dropingMino.position.x, dropingMino.position.y, playersBoard, playersBoardMinoes);
+                is_holded = false;
                 isAliggned(playersBoard, playersBoardMinoes);
                 if (endGame(playersBoard)){
                     gamePhase = "gameover";
@@ -409,6 +413,7 @@ event.key.add((key, e) => {
             } else if (dropingMino != null) {
                 // place the mino on the board
                 playersBoard, playersBoardMinoes = placeMino(droping, dropingMino, dropingMino.rotation.z, dropingMino.position.x, dropingMino.position.y, playersBoard, playersBoardMinoes);
+                is_holded = false;
                 isAliggned(playersBoard, playersBoardMinoes);
                 if (endGame(playersBoard)){
                     gamePhase = "gameover";
@@ -445,6 +450,7 @@ event.key.add((key, e) => {
                 } else if (dropingMino != null) {
                     // place the mino on the board
                     playersBoard, playersBoardMinoes = placeMino(droping, dropingMino, dropingMino.rotation.z, dropingMino.position.x, dropingMino.position.y, playersBoard, playersBoardMinoes);
+                    is_holded = false;
                     isAliggned(playersBoard, playersBoardMinoes);
                     if (endGame(playersBoard)){
                         gamePhase = "gameover";
@@ -457,6 +463,7 @@ event.key.add((key, e) => {
             break;
 
         case "r":  // hold
+        if (is_holded) break;
             let temp, tempMino;
             if (holdingMino == null){
                 holding = droping;
@@ -472,8 +479,15 @@ event.key.add((key, e) => {
                 holdingMino = dropingMino;
                 droping = temp;
                 dropingMino = tempMino;
+
+                dropingMino.position.set(-2.2, 2.3, 0);
                 console.log(`Swapping mino. Now holding ${holding}, dropping ${droping}`);
             }
+
+            holdingMino.position.set(-3.5, hold_y[holding], 0);
+            holdingMino.rotation.set(0, 0, 0);
+            is_holded = true;
+            break;
     }
 });
 
