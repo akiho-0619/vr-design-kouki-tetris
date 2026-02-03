@@ -9,9 +9,10 @@ const minos = ["O", "I", "L", "J", "S", "Z", "T"];
 let drops = shuffle(minos);
 let sumDelays = 0;
 
-let dropingMino = null;//drops.shift();
 let droping = null;
-
+let dropingMino = null;
+let holding = null;
+let holdingMino = null;
 
 let playersBoard = Array(23).fill().map(() => Array(10).fill(0));
 let opponentBoard = Array(23).fill().map(() => Array(10).fill(0));
@@ -38,7 +39,13 @@ const MINO_OFFSET = {
     "T":[[0,0],[-1,0],[0,1],[1,0]],
 }
 
-// オブジェクトを削除するチュートリアルが欲しいです
+
+const hold_text = create.text("hold",{
+    size:2,
+    position: [-3.5, 2.2, 0],
+    fontSize:30,
+});
+// 要望：オブジェクトを削除するチュートリアルが欲しいです
 function removeObject(object) {
     if (object.parent) {
         object.parent.remove(object); // シーンから削除
@@ -229,39 +236,43 @@ function canDropMino(mino, rotate, boardX, boardY, board){
     }
     let isCanDrop = true;
 
-    switch (ROTATE_NUM) {
-        case 0:
-            for (let i = 0; i < 4; i++) {
-                if (board[STANDARD_Y + MINO_OFFSET[mino][i][1]-1][STANDARD_X + MINO_OFFSET[mino][i][0]] == 1) {
-                    isCanDrop = false;
-                    break;
+    try{
+        switch (ROTATE_NUM) {
+            case 0:
+                for (let i = 0; i < 4; i++) {
+                    if (board[STANDARD_Y + MINO_OFFSET[mino][i][1]-1][STANDARD_X + MINO_OFFSET[mino][i][0]] == 1) {
+                        isCanDrop = false;
+                        break;
+                    }
                 }
-            }
-            break;
-        case 1:
-            for (let i = 0; i < 4; i++) {
-                if (board[STANDARD_Y + MINO_OFFSET[mino][i][0]-1][STANDARD_X - MINO_OFFSET[mino][i][1]] == 1) {
-                    isCanDrop = false;
-                    break;
+                break;
+            case 1:
+                for (let i = 0; i < 4; i++) {
+                    if (board[STANDARD_Y + MINO_OFFSET[mino][i][0]-1][STANDARD_X - MINO_OFFSET[mino][i][1]] == 1) {
+                        isCanDrop = false;
+                        break;
+                    }
                 }
-            }
-            break;
-        case 2:
-            for (let i = 0; i < 4; i++) {
-                if (board[STANDARD_Y - MINO_OFFSET[mino][i][1]-1][STANDARD_X - MINO_OFFSET[mino][i][0]] == 1) {
-                    isCanDrop = false;
-                    break;
+                break;
+            case 2:
+                for (let i = 0; i < 4; i++) {
+                    if (board[STANDARD_Y - MINO_OFFSET[mino][i][1]-1][STANDARD_X - MINO_OFFSET[mino][i][0]] == 1) {
+                        isCanDrop = false;
+                        break;
+                    }
                 }
-            }
-            break;
-        case 3:
-            for (let i = 0; i < 4; i++) {
-                if (board[STANDARD_Y - MINO_OFFSET[mino][i][0]-1][STANDARD_X + MINO_OFFSET[mino][i][1]] == 1) {
-                    isCanDrop = false;
-                    break;
+                break;
+            case 3:
+                for (let i = 0; i < 4; i++) {
+                    if (board[STANDARD_Y - MINO_OFFSET[mino][i][0]-1][STANDARD_X + MINO_OFFSET[mino][i][1]] == 1) {
+                        isCanDrop = false;
+                        break;
+                    }
                 }
-            }
-            break;
+                break;
+        }
+    }catch (e){
+        isCanDrop = false;
     }
     return isCanDrop;
 }
@@ -368,6 +379,7 @@ function shuffle(array) {
 }
 
 event.key.add((key, e) => {
+    console.log(`Key ${key} is pressed`);
     if (gamePhase != "playing") {
         return;
     }
@@ -427,22 +439,41 @@ event.key.add((key, e) => {
             break;
 
         case "w":  // hard drop
-        while (true){
-            if (canDropMino(droping, dropingMino.rotation.z, dropingMino.position.x, dropingMino.position.y, playersBoard)) {
-                dropingMino.position.y -= 0.2;
-            } else if (dropingMino != null) {
-                // place the mino on the board
-                playersBoard, playersBoardMinoes = placeMino(droping, dropingMino, dropingMino.rotation.z, dropingMino.position.x, dropingMino.position.y, playersBoard, playersBoardMinoes);
-                isAliggned(playersBoard, playersBoardMinoes);
-                if (endGame(playersBoard)){
-                    gamePhase = "gameover";
+            while (true){
+                if (canDropMino(droping, dropingMino.rotation.z, dropingMino.position.x, dropingMino.position.y, playersBoard)) {
+                    dropingMino.position.y -= 0.2;
+                } else if (dropingMino != null) {
+                    // place the mino on the board
+                    playersBoard, playersBoardMinoes = placeMino(droping, dropingMino, dropingMino.rotation.z, dropingMino.position.x, dropingMino.position.y, playersBoard, playersBoardMinoes);
+                    isAliggned(playersBoard, playersBoardMinoes);
+                    if (endGame(playersBoard)){
+                        gamePhase = "gameover";
+                    }
+                    dropingMino = null;
+                    break;
                 }
-                dropingMino = null;
-                break;
+                sumDelays %= drop_delays[dropStage];
             }
-            sumDelays %= drop_delays[dropStage];
-        }
-        break;
+            break;
+
+        case "r":  // hold
+            let temp, tempMino;
+            if (holdingMino == null){
+                holding = droping;
+                holdingMino = dropingMino;
+
+                dropingMino = null;
+                console.log(`Holding mino ${holding}`);
+            }
+            else {
+                temp = holding;
+                tempMino = holdingMino;
+                holding = droping;
+                holdingMino = dropingMino;
+                droping = temp;
+                dropingMino = tempMino;
+                console.log(`Swapping mino. Now holding ${holding}, dropping ${droping}`);
+            }
     }
 });
 
