@@ -427,8 +427,22 @@ event.key.add((key, e) => {
             break;
 
         case "w":  // hard drop
-            let a = 0;
-            a+1;
+        while (true){
+            if (canDropMino(droping, dropingMino.rotation.z, dropingMino.position.x, dropingMino.position.y, playersBoard)) {
+                dropingMino.position.y -= 0.2;
+            } else if (dropingMino != null) {
+                // place the mino on the board
+                playersBoard, playersBoardMinoes = placeMino(droping, dropingMino, dropingMino.rotation.z, dropingMino.position.x, dropingMino.position.y, playersBoard, playersBoardMinoes);
+                isAliggned(playersBoard, playersBoardMinoes);
+                if (endGame(playersBoard)){
+                    gamePhase = "gameover";
+                }
+                dropingMino = null;
+                break;
+            }
+            sumDelays %= drop_delays[dropStage];
+        }
+        break;
     }
 });
 
