@@ -17,21 +17,21 @@ let holding = null;
 let holdingMino = null;
 
 let playersBoard = Array(23).fill().map(() => Array(10).fill(0));
-let opponentBoard = Array(23).fill().map(() => Array(10).fill(0));
+// let opponentBoard = Array(23).fill().map(() => Array(10).fill(0));
 let playersBoardMinoes = Array(23).fill().map(() => Array(10).fill(null));
-let opponentBoardMinoes = Array(23).fill().map(() => Array(10).fill(null));
+// let opponentBoardMinoes = Array(23).fill().map(() => Array(10).fill(null));
 let gamePhase = "playing"; // "playing", "gameover"
 
 let gameover_text;
 // gameover_text.visible = false;
 
-controls.connect()
+// controls.connect()
 camera.position.set(0, 2, 4)
 create.ambientLight(
     { intensity:2}
 )
 create.directionalLight()
-helper.axes();
+// helper.axes();
 // OILJSZT
 const COLORS = {"O":"#ffde0a", "I":"#00ddfa", "L":"#0020f0", "J":"#f07400", "S":"#93f500", "Z":"#f52500", "T":"#c505ff"};
 const MINO_OFFSET = {
@@ -47,7 +47,7 @@ const hold_y = {"O":1.7, "I":1.3, "L":1.5, "J":1.5, "S":1.7, "Z":1.7, "T":1.7};
 
 const hold_text = create.text("hold",{
     size:2,
-    position: [-3.5, 2.2, 0],
+    position: [-1.5, 2.2, 0],
     fontSize:30,
 });
 
@@ -74,7 +74,7 @@ function removeObject(object) {
 for (let j=0; j<20; j++){
     for (let i=0; i<10; i++){
         create.cube({
-            position:[-3 + i*CUBE_SIZE, -1.5 + j*CUBE_SIZE, 0],
+            position:[-1 + i*CUBE_SIZE, -1.5 + j*CUBE_SIZE, 0],
             size:SHADOW_CUBE_SIZE,
             option:{color: (20*j + i) % 2 == 0 ? "#999999" : "#cccccc"},
         });
@@ -82,16 +82,16 @@ for (let j=0; j<20; j++){
 }
 
 // opponent's board
-for (let j=0; j<20; j++){
-    for (let i=0; i<10; i++){
-        create.cube({
-            position:[3 - i*CUBE_SIZE, -1.5 + j*0.2, 0],
-            size:SHADOW_CUBE_SIZE,
-            option:{color: (20*j + i) % 2 == 0 ? "#999999" : "#cccccc"},
-            // rotation
-        });
-    }
-}
+// for (let j=0; j<20; j++){
+//     for (let i=0; i<10; i++){
+//         create.cube({
+//             position:[3 - i*CUBE_SIZE, -1.5 + j*0.2, 0],
+//             size:SHADOW_CUBE_SIZE,
+//             option:{color: (20*j + i) % 2 == 0 ? "#999999" : "#cccccc"},
+//             // rotation
+//         });
+//     }
+// }
 
 function createDropMino(type){
     let mino;
@@ -185,7 +185,7 @@ function endGame(board){
 }
 
 function placeMino(mino, minos, rotate, boardX, boardY, board, boardMinoes){
-    const STANDARD_X = Math.round((3 + boardX) / CUBE_SIZE);
+    const STANDARD_X = Math.round((1 + boardX) / CUBE_SIZE);
     const STANDARD_Y = Math.round((1.5 + boardY) / CUBE_SIZE);
     let ROTATE_NUM = Math.round(rotate / (Math.PI / 2))%4; 
     if (ROTATE_NUM < 0) {
@@ -200,25 +200,25 @@ function placeMino(mino, minos, rotate, boardX, boardY, board, boardMinoes){
         case 0:
             for (let i = 0; i < 4; i++){
                 board[STANDARD_Y + MINO_OFFSET[mino][i][1]][STANDARD_X + MINO_OFFSET[mino][i][0]] = 1;
-                boardMinoes[STANDARD_Y + MINO_OFFSET[mino][i][1]][STANDARD_X + MINO_OFFSET[mino][i][0]] = create.cube({position:[-3 + (STANDARD_X + MINO_OFFSET[mino][i][0])*CUBE_SIZE, -1.5 + (STANDARD_Y + MINO_OFFSET[mino][i][1])*CUBE_SIZE, 0], size:CUBE_SIZE, option:{color: COLORS[mino]}});
+                boardMinoes[STANDARD_Y + MINO_OFFSET[mino][i][1]][STANDARD_X + MINO_OFFSET[mino][i][0]] = create.cube({position:[-1 + (STANDARD_X + MINO_OFFSET[mino][i][0])*CUBE_SIZE, -1.5 + (STANDARD_Y + MINO_OFFSET[mino][i][1])*CUBE_SIZE, 0], size:CUBE_SIZE, option:{color: COLORS[mino]}});
             }
             break;
         case 1: // rotate to Q
             for (let i = 0; i < 4; i++){
                 board[STANDARD_Y + MINO_OFFSET[mino][i][0]][STANDARD_X - MINO_OFFSET[mino][i][1]] = 1;
-                boardMinoes[STANDARD_Y + MINO_OFFSET[mino][i][0]][STANDARD_X - MINO_OFFSET[mino][i][1]] = create.cube({position:[-3 + (STANDARD_X - MINO_OFFSET[mino][i][1])*CUBE_SIZE, -1.5 + (STANDARD_Y + MINO_OFFSET[mino][i][0])*CUBE_SIZE, 0], size:CUBE_SIZE, option:{color: COLORS[mino]}});
+                boardMinoes[STANDARD_Y + MINO_OFFSET[mino][i][0]][STANDARD_X - MINO_OFFSET[mino][i][1]] = create.cube({position:[-1 + (STANDARD_X - MINO_OFFSET[mino][i][1])*CUBE_SIZE, -1.5 + (STANDARD_Y + MINO_OFFSET[mino][i][0])*CUBE_SIZE, 0], size:CUBE_SIZE, option:{color: COLORS[mino]}});
             }
             break;
         case 2:
             for (let i = 0; i < 4; i++){
                 board[STANDARD_Y - MINO_OFFSET[mino][i][1]][STANDARD_X - MINO_OFFSET[mino][i][0]] = 1;
-                boardMinoes[STANDARD_Y - MINO_OFFSET[mino][i][1]][STANDARD_X - MINO_OFFSET[mino][i][0]] = create.cube({position:[-3 + (STANDARD_X - MINO_OFFSET[mino][i][0])*CUBE_SIZE, -1.5 + (STANDARD_Y - MINO_OFFSET[mino][i][1])*CUBE_SIZE, 0], size:CUBE_SIZE, option:{color: COLORS[mino]}});
+                boardMinoes[STANDARD_Y - MINO_OFFSET[mino][i][1]][STANDARD_X - MINO_OFFSET[mino][i][0]] = create.cube({position:[-1 + (STANDARD_X - MINO_OFFSET[mino][i][0])*CUBE_SIZE, -1.5 + (STANDARD_Y - MINO_OFFSET[mino][i][1])*CUBE_SIZE, 0], size:CUBE_SIZE, option:{color: COLORS[mino]}});
             }
             break;
         case 3:
             for (let i = 0; i < 4; i++){
                 board[STANDARD_Y - MINO_OFFSET[mino][i][0]][STANDARD_X + MINO_OFFSET[mino][i][1]] = 1;
-                boardMinoes[STANDARD_Y - MINO_OFFSET[mino][i][0]][STANDARD_X + MINO_OFFSET[mino][i][1]] = create.cube({position:[-3 + (STANDARD_X + MINO_OFFSET[mino][i][1])*CUBE_SIZE, -1.5 + (STANDARD_Y - MINO_OFFSET[mino][i][0])*CUBE_SIZE, 0], size:CUBE_SIZE, option:{color: COLORS[mino]}});
+                boardMinoes[STANDARD_Y - MINO_OFFSET[mino][i][0]][STANDARD_X + MINO_OFFSET[mino][i][1]] = create.cube({position:[-1 + (STANDARD_X + MINO_OFFSET[mino][i][1])*CUBE_SIZE, -1.5 + (STANDARD_Y - MINO_OFFSET[mino][i][0])*CUBE_SIZE, 0], size:CUBE_SIZE, option:{color: COLORS[mino]}});
             }
             break;
     }
@@ -233,7 +233,7 @@ function placeMino(mino, minos, rotate, boardX, boardY, board, boardMinoes){
 }
 
 function canDropMino(mino, rotate, boardX, boardY, board){
-    const STANDARD_X = Math.round((3 + boardX) / CUBE_SIZE);
+    const STANDARD_X = Math.round((1 + boardX) / CUBE_SIZE);
     const STANDARD_Y = Math.round((1.5 + boardY) / CUBE_SIZE);
     let ROTATE_NUM = Math.round(rotate / (Math.PI / 2)) % 4;
     if (ROTATE_NUM < 0) {
@@ -349,7 +349,7 @@ animate(({delta, time})=>{
         if (dropingMino == null){
             droping = drops.shift();
             dropingMino = createDropMino(droping);
-            dropingMino.position.set(-2.2, 2.3, 0);
+            dropingMino.position.set(-0.2, 2.3, 0);
 
             if (drops.length < 4){
                 drops = drops.concat(shuffle(minos));
@@ -409,7 +409,7 @@ event.key.add((key, e) => {
         return;
     }
     let dist = calcStandardFromStandard(droping, dropingMino.rotation.z);
-    const STANDARD_X = Math.round((3 + dropingMino.position.x) / CUBE_SIZE);
+    const STANDARD_X = Math.round((1 + dropingMino.position.x) / CUBE_SIZE);
     switch(key){
         case "a":   // to left
             if (STANDARD_X + dist[0] - 1 >= 0){
@@ -445,11 +445,6 @@ event.key.add((key, e) => {
                         color: "#ff0000",
                     });
                     
-
-
-
-
-
                 }
                 dropingMino = null;
             }
@@ -517,10 +512,10 @@ event.key.add((key, e) => {
                 droping = temp;
                 dropingMino = tempMino;
 
-                dropingMino.position.set(-2.2, 2.3, 0);
+                dropingMino.position.set(-0.2, 2.3, 0);
             }
 
-            holdingMino.position.set(-3.5, hold_y[holding], 0);
+            holdingMino.position.set(-1.5, hold_y[holding], 0);
             holdingMino.rotation.set(0, 0, 0);
             is_holded = true;
             break;
