@@ -22,6 +22,9 @@ let playersBoardMinoes = Array(23).fill().map(() => Array(10).fill(null));
 let opponentBoardMinoes = Array(23).fill().map(() => Array(10).fill(null));
 let gamePhase = "playing"; // "playing", "gameover"
 
+let gameover_text;
+// gameover_text.visible = false;
+
 controls.connect()
 camera.position.set(0, 2, 4)
 create.ambientLight(
@@ -176,7 +179,6 @@ function createDropMino(type){
 
 function endGame(board){
     if (board[20].some(cell => cell == 1)){
-        console.log("Game Over");
         return true;
     }
     return false;
@@ -191,9 +193,9 @@ function placeMino(mino, minos, rotate, boardX, boardY, board, boardMinoes){
     }
 
     board[STANDARD_Y][STANDARD_X] = 1;
-    console.log(`Placing mino ${mino} at (${STANDARD_X}, ${STANDARD_Y}) rotated ${ROTATE_NUM} times`);
-    console.log(STANDARD_Y + MINO_OFFSET[mino][1][1], STANDARD_X + MINO_OFFSET[mino][1][0])
-    console.log(minos.children);
+    // console.log(`Placing mino ${mino} at (${STANDARD_X}, ${STANDARD_Y}) rotated ${ROTATE_NUM} times`);
+    // console.log(STANDARD_Y + MINO_OFFSET[mino][1][1], STANDARD_X + MINO_OFFSET[mino][1][0])
+    // console.log(minos.children);
     switch (ROTATE_NUM){
         case 0:
             for (let i = 0; i < 4; i++){
@@ -220,12 +222,12 @@ function placeMino(mino, minos, rotate, boardX, boardY, board, boardMinoes){
             }
             break;
     }
-    console.log(minos.children);
+    // console.log(minos.children);
     // for (let i=0; i<4; i++){
     //     removeObject(minos.children[i]);
     // }
     removeObject(minos);
-    console.log([...board].reverse().map(row => row.join(" ")).join("\n"));
+    // console.log([...board].reverse().map(row => row.join(" ")).join("\n"));
 
     return board, boardMinoes;
 }
@@ -349,9 +351,10 @@ animate(({delta, time})=>{
             dropingMino = createDropMino(droping);
             dropingMino.position.set(-2.2, 2.3, 0);
 
-            if (drops.length == 0){
-                drops = shuffle(minos);
+            if (drops.length < 4){
+                drops = drops.concat(shuffle(minos));
             }
+            // console.log(drops);
         }
         sumDelays += delta;
         if (sumDelays > drop_delays[dropStage]) {   //時間経過の落下
@@ -359,19 +362,37 @@ animate(({delta, time})=>{
                 dropingMino.position.y -= 0.2;
             } else {
                 // place the mino on the board
-                console.log(dropingMino.children);
+                // console.log(dropingMino.children);
                 playersBoard, playersBoardMinoes = placeMino(droping, dropingMino, dropingMino.rotation.z, dropingMino.position.x, dropingMino.position.y, playersBoard, playersBoardMinoes);
                 is_holded = false;
                 isAliggned(playersBoard, playersBoardMinoes);
                 if (endGame(playersBoard)){
                     gamePhase = "gameover";
+                    gameover_text = create.text("Game Over",{
+                        size:[5.5, 1], // size:[5.5, 1],
+                        position: [0, 0, 1],
+                        fontSize:100,
+                        color: "#ff0000",
+                    });
+                    
+
+
+
                 }
                 dropingMino = null;
             }
             sumDelays %= drop_delays[dropStage];
         }
+    }else if (gamePhase == "gameover"){
+        // gameover_text.rotation.x += Math.sin(delta) * 0.2;
+        // gameover_text.rotation.y += Math.cos(delta) * 0.2;
+        // gameover_text.rotation.z.lerp(Math.PI * 2, 0.01);
+        if (gameover_text){
+            gameover_text.position.lerp(new THREE.Vector3(0, Math.cos(time) + delta, 1), delta);
+        }
+
     }
-})
+});
 
 function shuffle(array) {
     let return_array = array.slice();
@@ -383,7 +404,7 @@ function shuffle(array) {
 }
 
 event.key.add((key, e) => {
-    console.log(`Key ${key} is pressed`);
+    // console.log(`Key ${key} is pressed`);
     if (gamePhase != "playing") {
         return;
     }
@@ -417,6 +438,18 @@ event.key.add((key, e) => {
                 isAliggned(playersBoard, playersBoardMinoes);
                 if (endGame(playersBoard)){
                     gamePhase = "gameover";
+                    gameover_text = create.text("Game Over",{
+                        size:[5.5, 1], // size:[5.5, 1],
+                        position: [0, 0, 1],
+                        fontSize:100,
+                        color: "#ff0000",
+                    });
+                    
+
+
+
+
+
                 }
                 dropingMino = null;
             }
@@ -428,7 +461,7 @@ event.key.add((key, e) => {
             dist = calcStandardFromStandard(droping, dropingMino.rotation.z);
             if (STANDARD_X + dist[0] - 1 >= 0){
                 // dropingMino.position.x += CUBE_SIZE;
-                console.log("to out of left");
+
             }
             // dropingMino.position.x = Math.max(dropingMino.position.x + dist[0] * CUBE_SIZE, -3);
             break;
@@ -437,7 +470,6 @@ event.key.add((key, e) => {
             dropingMino.rotation.z += -Math.PI / 2;
             dist = calcStandardFromStandard(droping, dropingMino.rotation.z);
             if (STANDARD_X + dist[1] + 1 < 10){
-                console.log("to out of right");
             //     dropingMino.position.x += CUBE_SIZE;
             }
             // dropingMino.position.x = Math.min(dropingMino.position.x - dist[1] * CUBE_SIZE, -1.2);
@@ -454,6 +486,12 @@ event.key.add((key, e) => {
                     isAliggned(playersBoard, playersBoardMinoes);
                     if (endGame(playersBoard)){
                         gamePhase = "gameover";
+                        gameover_text = create.text("Game Over",{
+                            size:[5.5, 1], // size:[5.5, 1],
+                            position: [0, 0, 1],
+                            fontSize:100,
+                            color: "#ff0000",
+                        });
                     }
                     dropingMino = null;
                     break;
@@ -470,7 +508,6 @@ event.key.add((key, e) => {
                 holdingMino = dropingMino;
 
                 dropingMino = null;
-                console.log(`Holding mino ${holding}`);
             }
             else {
                 temp = holding;
@@ -481,7 +518,6 @@ event.key.add((key, e) => {
                 dropingMino = tempMino;
 
                 dropingMino.position.set(-2.2, 2.3, 0);
-                console.log(`Swapping mino. Now holding ${holding}, dropping ${droping}`);
             }
 
             holdingMino.position.set(-3.5, hold_y[holding], 0);
