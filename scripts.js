@@ -1,5 +1,5 @@
 import { init } from "@masabando/easy-three";
-const { camera, create, animate, controls, load, helper, THREE, event } = init();
+const { camera, create, animate, controls, load, helper, THREE, event, postprocessing } = init();
 
 const CUBE_SIZE = 0.2;
 const SHADOW_CUBE_SIZE = 0.1;
@@ -32,6 +32,8 @@ create.ambientLight(
 )
 create.directionalLight()
 // helper.axes();
+const { selectedBloom, addSelectedBloom } = postprocessing.selectedBloom()
+
 // OILJSZT
 const COLORS = {"O":"#ffde0a", "I":"#00ddfa", "L":"#0020f0", "J":"#f07400", "S":"#93f500", "Z":"#f52500", "T":"#c505ff"};
 const MINO_OFFSET = {
@@ -44,7 +46,7 @@ const MINO_OFFSET = {
     "T":[[0,0],[-1,0],[0,1],[1,0]],
 }
 const hold_y = {"O":1.7, "I":1.3, "L":1.5, "J":1.5, "S":1.7, "Z":1.7, "T":1.7};
-
+    
 const hold_text = create.text("hold",{
     size:2,
     position: [-1.5, 2.2, 0],
