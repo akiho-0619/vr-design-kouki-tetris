@@ -53,7 +53,17 @@ const hold_text = create.text("hold",{
     fontSize:30,
 });
 
-// 要望：オブジェクトを削除するチュートリアルが欲しいです
+const description_text_1 = create.text("Move:A/D  Rotate:Q/E",{
+    size:3,
+    position: [0, -2.2, 0],
+    fontSize:20,
+});
+const description_text_2 = create.text("Soft Drop:S  Hard Drop:W  Hold:R",{
+    size:3.5,
+    position: [0, -2.5, 0],
+    fontSize:20,
+});
+
 function removeObject(object) {
     if (object.parent) {
         object.parent.remove(object); // シーンから削除
