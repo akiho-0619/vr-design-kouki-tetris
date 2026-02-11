@@ -10,7 +10,6 @@ let drops = shuffle(minos);
 let sumDelays = 0;
 
 let is_holded = false;
-
 let droping = null;
 let dropingMino = null;
 let holding = null;
@@ -23,9 +22,8 @@ let playersBoardMinoes = Array(23).fill().map(() => Array(10).fill(null));
 let gamePhase = "playing"; // "playing", "gameover"
 
 let gameover_text;
-// gameover_text.visible = false;
 
-// controls.connect()
+controls.connect()
 camera.position.set(0, 2, 4)
 create.ambientLight(
     { intensity:2}
@@ -46,7 +44,7 @@ const MINO_OFFSET = {
     "T":[[0,0],[-1,0],[0,1],[1,0]],
 }
 const hold_y = {"O":1.7, "I":1.3, "L":1.5, "J":1.5, "S":1.7, "Z":1.7, "T":1.7};
-    
+
 const hold_text = create.text("hold",{
     size:2,
     position: [-1.5, 2.2, 0],
@@ -63,24 +61,6 @@ const description_text_2 = create.text("Soft Drop:S  Hard Drop:W  Hold:R",{
     position: [0, -2.5, 0],
     fontSize:20,
 });
-
-function removeObject(object) {
-    if (object.parent) {
-        object.parent.remove(object); // シーンから削除
-    }
-
-    // ジオメトリとマテリアルを破棄
-    if (object.geometry) {
-        object.geometry.dispose();
-    }
-    if (object.material) {
-        if (Array.isArray(object.material)) {
-            object.material.forEach((mat) => mat.dispose());
-        } else {
-            object.material.dispose();
-        }
-    }
-}
 
 // player's board  
 for (let j=0; j<20; j++){
@@ -205,9 +185,7 @@ function placeMino(mino, minos, rotate, boardX, boardY, board, boardMinoes){
     }
 
     board[STANDARD_Y][STANDARD_X] = 1;
-    // console.log(`Placing mino ${mino} at (${STANDARD_X}, ${STANDARD_Y}) rotated ${ROTATE_NUM} times`);
-    // console.log(STANDARD_Y + MINO_OFFSET[mino][1][1], STANDARD_X + MINO_OFFSET[mino][1][0])
-    // console.log(minos.children);
+    
     switch (ROTATE_NUM){
         case 0:
             for (let i = 0; i < 4; i++){
@@ -234,13 +212,7 @@ function placeMino(mino, minos, rotate, boardX, boardY, board, boardMinoes){
             }
             break;
     }
-    // console.log(minos.children);
-    // for (let i=0; i<4; i++){
-    //     removeObject(minos.children[i]);
-    // }
-    removeObject(minos);
-    // console.log([...board].reverse().map(row => row.join(" ")).join("\n"));
-
+    minos.children.forEach(cube => { cube.scale.set(0, 0, 0); });
     return board, boardMinoes;
 }
 
@@ -312,8 +284,6 @@ function isAliggned(board, boardMinoes){
                     boardMinoes[j][k] = boardMinoes[j+1][k];
                 }
             }
-            // boardMinoes.splice(i, 1);
-            // boardMinoes.push(Array(10).fill(null));
         }
     }
 }
@@ -366,7 +336,7 @@ animate(({delta, time})=>{
             if (drops.length < 4){
                 drops = drops.concat(shuffle(minos));
             }
-            // console.log(drops);
+
         }
         sumDelays += delta;
         if (sumDelays > drop_delays[dropStage]) {   //時間経過の落下
@@ -381,24 +351,17 @@ animate(({delta, time})=>{
                 if (endGame(playersBoard)){
                     gamePhase = "gameover";
                     gameover_text = create.text("Game Over",{
-                        size:[5.5, 1], // size:[5.5, 1],
+                        size:[5.5, 1], 
                         position: [0, 0, 1],
                         fontSize:100,
                         color: "#ff0000",
                     });
-                    
-
-
-
                 }
                 dropingMino = null;
             }
             sumDelays %= drop_delays[dropStage];
         }
-    }else if (gamePhase == "gameover"){
-        // gameover_text.rotation.x += Math.sin(delta) * 0.2;
-        // gameover_text.rotation.y += Math.cos(delta) * 0.2;
-        // gameover_text.rotation.z.lerp(Math.PI * 2, 0.01);
+    }else if (gamePhase == "gameover"){     
         if (gameover_text){
             gameover_text.position.lerp(new THREE.Vector3(0, Math.cos(time) + delta, 1), delta);
         }
@@ -416,7 +379,6 @@ function shuffle(array) {
 }
 
 event.key.add((key, e) => {
-    // console.log(`Key ${key} is pressed`);
     if (gamePhase != "playing") {
         return;
     }
@@ -427,20 +389,16 @@ event.key.add((key, e) => {
             if (STANDARD_X + dist[0] - 1 >= 0){
                 dropingMino.position.x += -CUBE_SIZE;
             }
-            // dropingMino.position.x = Math.max(dropingMino.position.x + dist[0] * CUBE_SIZE, -3);
-            
             break;
 
         case "d":   // to right
             if (STANDARD_X + dist[1] + 1 < 10){
                 dropingMino.position.x += CUBE_SIZE;
             }
-            // dropingMino.position.x = Math.min(dropingMino.position.x - dist[1] * CUBE_SIZE, -1.2);
             break;
 
         case "s":   // soft drop
             sumDelays = 0;
-            // if (dropingMino.position.y > -1.5 && canDropMino(droping, dropingMino.rotation.z, dropingMino.position.x, dropingMino.position.y, playersBoard)) {
             if (canDropMino(droping, dropingMino.rotation.z, dropingMino.position.x, dropingMino.position.y, playersBoard)) {
                 dropingMino.position.y -= 0.2;
             } else if (dropingMino != null) {
@@ -451,12 +409,11 @@ event.key.add((key, e) => {
                 if (endGame(playersBoard)){
                     gamePhase = "gameover";
                     gameover_text = create.text("Game Over",{
-                        size:[5.5, 1], // size:[5.5, 1],
+                        size:[5.5, 1], 
                         position: [0, 0, 1],
                         fontSize:100,
                         color: "#ff0000",
                     });
-                    
                 }
                 dropingMino = null;
             }
@@ -466,20 +423,11 @@ event.key.add((key, e) => {
         case "q":   // rotate left
             dropingMino.rotation.z += Math.PI / 2;
             dist = calcStandardFromStandard(droping, dropingMino.rotation.z);
-            if (STANDARD_X + dist[0] - 1 >= 0){
-                // dropingMino.position.x += CUBE_SIZE;
-
-            }
-            // dropingMino.position.x = Math.max(dropingMino.position.x + dist[0] * CUBE_SIZE, -3);
             break;
 
         case "e":   // rotate right
             dropingMino.rotation.z += -Math.PI / 2;
             dist = calcStandardFromStandard(droping, dropingMino.rotation.z);
-            if (STANDARD_X + dist[1] + 1 < 10){
-            //     dropingMino.position.x += CUBE_SIZE;
-            }
-            // dropingMino.position.x = Math.min(dropingMino.position.x - dist[1] * CUBE_SIZE, -1.2);
             break;
 
         case "w":  // hard drop
@@ -494,7 +442,7 @@ event.key.add((key, e) => {
                     if (endGame(playersBoard)){
                         gamePhase = "gameover";
                         gameover_text = create.text("Game Over",{
-                            size:[5.5, 1], // size:[5.5, 1],
+                            size:[5.5, 1], 
                             position: [0, 0, 1],
                             fontSize:100,
                             color: "#ff0000",
@@ -513,7 +461,6 @@ event.key.add((key, e) => {
             if (holdingMino == null){
                 holding = droping;
                 holdingMino = dropingMino;
-
                 dropingMino = null;
             }
             else {
@@ -523,10 +470,8 @@ event.key.add((key, e) => {
                 holdingMino = dropingMino;
                 droping = temp;
                 dropingMino = tempMino;
-
                 dropingMino.position.set(-0.2, 2.3, 0);
             }
-
             holdingMino.position.set(-1.5, hold_y[holding], 0);
             holdingMino.rotation.set(0, 0, 0);
             is_holded = true;
